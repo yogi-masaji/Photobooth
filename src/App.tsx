@@ -5,7 +5,6 @@ import PhotoStrip from "./components/PhotoStrip";
 import FilterSelector from "./components/FilterSelector";
 import StickerSelector from "./components/StickerSelector";
 import FrameCustomizer from "./components/FrameCustomizer";
-import Footer from "./footer";
 import "./App.css";
 import "./assets/css/instagram.min.css";
 
@@ -13,6 +12,7 @@ function App() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [photos, setPhotos] = useState<string[]>([]);
+  const [isMirrored, setIsMirrored] = useState(true);
   const maxPhotos = 4;
   const [isStreaming, setIsStreaming] = useState(false);
   const [countdown, setCountdown] = useState(0);
@@ -84,84 +84,6 @@ function App() {
     setCountdown(3);
   };
 
-  const applyFilter = (canvas: HTMLCanvasElement, filter: string) => {
-    const context = canvas.getContext("2d");
-    if (!context) return;
-
-    switch (filter) {
-      case "grayscale":
-        const imageData = context.getImageData(
-          0,
-          0,
-          canvas.width,
-          canvas.height
-        );
-        const data = imageData.data;
-        for (let i = 0; i < data.length; i += 4) {
-          const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-          data[i] = avg; // red
-          data[i + 1] = avg; // green
-          data[i + 2] = avg; // blue
-        }
-        context.putImageData(imageData, 0, 0);
-        break;
-      case "sepia":
-        const sepiaData = context.getImageData(
-          0,
-          0,
-          canvas.width,
-          canvas.height
-        );
-        const sepiaPixels = sepiaData.data;
-        for (let i = 0; i < sepiaPixels.length; i += 4) {
-          const r = sepiaPixels[i];
-          const g = sepiaPixels[i + 1];
-          const b = sepiaPixels[i + 2];
-          sepiaPixels[i] = Math.min(255, r * 0.393 + g * 0.769 + b * 0.189);
-          sepiaPixels[i + 1] = Math.min(255, r * 0.349 + g * 0.686 + b * 0.168);
-          sepiaPixels[i + 2] = Math.min(255, r * 0.272 + g * 0.534 + b * 0.131);
-        }
-        context.putImageData(sepiaData, 0, 0);
-        break;
-      case "invert":
-        const invertData = context.getImageData(
-          0,
-          0,
-          canvas.width,
-          canvas.height
-        );
-        const invertPixels = invertData.data;
-        for (let i = 0; i < invertPixels.length; i += 4) {
-          invertPixels[i] = 255 - invertPixels[i]; // red
-          invertPixels[i + 1] = 255 - invertPixels[i + 1]; // green
-          invertPixels[i + 2] = 255 - invertPixels[i + 2]; // blue
-        }
-        context.putImageData(invertData, 0, 0);
-        break;
-      case "vintage":
-        context.globalCompositeOperation = "multiply";
-        context.fillStyle = "rgba(255, 210, 170, 0.3)";
-        context.fillRect(0, 0, canvas.width, canvas.height);
-        context.globalCompositeOperation = "source-over";
-        break;
-      case "cool":
-        context.globalCompositeOperation = "multiply";
-        context.fillStyle = "rgba(170, 210, 255, 0.3)";
-        context.fillRect(0, 0, canvas.width, canvas.height);
-        context.globalCompositeOperation = "source-over";
-        break;
-      case "warm":
-        context.globalCompositeOperation = "multiply";
-        context.fillStyle = "rgba(255, 170, 120, 0.3)";
-        context.fillRect(0, 0, canvas.width, canvas.height);
-        context.globalCompositeOperation = "source-over";
-        break;
-      default:
-        // No filter
-        break;
-    }
-  };
-
   const applyStickers = async (
     canvas: HTMLCanvasElement,
     stickers: Array<{ id: string; x: number; y: number; scale: number }>
@@ -208,8 +130,19 @@ function App() {
         const videoFilter = window.getComputedStyle(video).filter;
         context.filter = videoFilter; // Terapkan filter ke canvas
 
+        // Check if mirroring is enabled
+        if (isMirrored) {
+          context.translate(canvas.width, 0); // Geser titik awal ke kanan
+          context.scale(-1, 1); // Flip horizontal
+        }
+
         // Gambar video ke canvas dengan filter yang diterapkan
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // Kembalikan transformasi ke normal setelah menggambar
+        if (isMirrored) {
+          context.setTransform(1, 0, 0, 1, 0, 0);
+        }
 
         // Apply stickers jika ada
         await applyStickers(canvas, selectedStickers);
@@ -295,7 +228,7 @@ function App() {
                 ref={videoRef}
                 autoPlay
                 playsInline
-                className={`camera-video ${
+                className={`camera-video ${isMirrored ? "mirror" : ""} ${
                   !isStreaming ? "hidden" : ""
                 } ${selectedFilter}`}
               />
@@ -359,6 +292,12 @@ function App() {
                   disabled={photos.length >= maxPhotos}
                 >
                   Snap Instantly
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setIsMirrored((prev) => !prev)}
+                >
+                  {isMirrored ? "Disable Mirroring" : "Enable Mirroring"}
                 </button>
               </>
             )}

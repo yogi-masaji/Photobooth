@@ -492,7 +492,7 @@ body {
 .photo-strip-container {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 2rem;
 }
 
 .photo-strip-header {
@@ -536,14 +536,14 @@ body {
 .strip-inner {
   background-color: white;
   border-radius: 0.5rem;
-  padding: 0.75rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  box-shadow: 0 5px 51px rgba(0, 0, 0, 0.1);
 }
 
 .photos-container {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 1rem;
 }
 
 .photo-item {
@@ -577,4 +577,8 @@ body {
 .filter-grid{
   height:300px;
   overflow-y: auto;
+}
+
+.mirror {
+  transform: scaleX(-1);
 }

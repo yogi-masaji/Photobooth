@@ -42,7 +42,7 @@ export default function PhotoStrip({
       html2canvas
         .default(strip, {
           backgroundColor: null,
-          scale: 5, // Higher resolution
+          scale: 3, // Higher resolution
         })
         .then((canvas) => {
           const link = document.createElement("a");
