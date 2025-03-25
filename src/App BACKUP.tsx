@@ -208,7 +208,172 @@ function App() {
     setFrameDecorations([]);
   };
 
-  return <div className="container"></div>;
+  return (
+    <div className="container">
+      <h1 className="title">Web Photobooth</h1>
+
+      <div className="main-grid">
+        <div className="controls-section">
+          <div className="camera-card">
+            <div className="camera-container">
+              {!isStreaming && !cameraError && (
+                <div className="camera-placeholder">
+                  Click "Start Camera" to begin
+                </div>
+              )}
+
+              {cameraError && <div className="camera-error">{cameraError}</div>}
+
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                className={`camera-video ${isMirrored ? "mirror" : ""} ${
+                  !isStreaming ? "hidden" : ""
+                } ${selectedFilter}`}
+              />
+
+              {isStreaming && selectedStickers.length > 0 && (
+                <div className="stickers-overlay">
+                  {selectedStickers.map((sticker, index) => (
+                    <div
+                      key={index}
+                      className="sticker-item"
+                      style={{
+                        left: `${sticker.x * 100}%`,
+                        top: `${sticker.y * 100}%`,
+                      }}
+                    >
+                      <img
+                        src={`/stickers/${sticker.id}.png`}
+                        alt={`Sticker ${sticker.id}`}
+                        style={{
+                          width: `${sticker.scale * 100}px`,
+                          height: "auto",
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {countdown > 0 && (
+                <div className="countdown-overlay">
+                  <span className="countdown-number">{countdown}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="button-group">
+            {!isStreaming ? (
+              <button className="btn btn-primary" onClick={startCamera}>
+                Start Camera
+              </button>
+            ) : (
+              <>
+                <button className="btn btn-danger" onClick={stopCamera}>
+                  Stop Camera
+                </button>
+                <button
+                  className="btn btn-primary"
+                  onClick={startCountdown}
+                  disabled={countdown > 0 || photos.length >= maxPhotos}
+                >
+                  {countdown > 0
+                    ? `Taking photo in ${countdown}...`
+                    : photos.length >= maxPhotos
+                    ? "Max Photos Reached"
+                    : `Take Photo (${photos.length}/${maxPhotos})`}
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  onClick={capturePhoto}
+                  disabled={photos.length >= maxPhotos}
+                >
+                  Snap Instantly
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setIsMirrored((prev) => !prev)}
+                >
+                  {isMirrored ? "Disable Mirroring" : "Enable Mirroring"}
+                </button>
+              </>
+            )}
+          </div>
+
+          {isStreaming && (
+            <div className="tabs">
+              <div className="tabs-header">
+                <button
+                  className={`tab-button ${
+                    activeTab === "filters" ? "active" : ""
+                  }`}
+                  onClick={() => setActiveTab("filters")}
+                >
+                  Filters
+                </button>
+                <button
+                  className={`tab-button ${
+                    activeTab === "stickers" ? "active" : ""
+                  }`}
+                  onClick={() => setActiveTab("stickers")}
+                >
+                  Stickers
+                </button>
+                <button
+                  className={`tab-button ${
+                    activeTab === "frame" ? "active" : ""
+                  }`}
+                  onClick={() => setActiveTab("frame")}
+                >
+                  Frame
+                </button>
+              </div>
+              <div className="tabs-content">
+                {activeTab === "filters" && (
+                  <FilterSelector
+                    selectedFilter={selectedFilter}
+                    onSelectFilter={setSelectedFilter}
+                  />
+                )}
+                {activeTab === "stickers" && (
+                  <StickerSelector
+                    onAddSticker={addSticker}
+                    selectedStickers={selectedStickers}
+                    onRemoveSticker={removeSticker}
+                    onUpdatePosition={updateStickerPosition}
+                    onUpdateScale={updateStickerScale}
+                  />
+                )}
+                {activeTab === "frame" && (
+                  <FrameCustomizer
+                    frameColor={frameColor}
+                    onChangeFrameColor={setFrameColor}
+                    frameDecorations={frameDecorations}
+                    onAddDecoration={addFrameDecoration}
+                    onRemoveDecoration={removeFrameDecoration}
+                    onClearDecorations={clearFrameDecorations}
+                  />
+                )}
+              </div>
+            </div>
+          )}
+
+          <canvas ref={canvasRef} className="hidden-canvas" />
+        </div>
+
+        <PhotoStrip
+          photos={photos}
+          onClear={clearPhotos}
+          frameColor={frameColor}
+          frameDecorations={frameDecorations}
+        />
+      </div>
+      {/* <Footer /> */}
+    </div>
+  );
 }
 
 export default App;
